@@ -24,7 +24,15 @@ fun AppNavigation(vm: AppViewModel, initialRoute: String = "home") {
         bottomBar = { BottomBar(nav) }
     ) { padding ->
         NavHost(navController = nav, startDestination = initialRoute) {
-            composable("home")     { HomeScreen(vm = vm, padding = padding) }
+            composable("home") {
+                HomeScreen(
+                    vm               = vm,
+                    onNavigateToShare = {
+                        nav.navigate("share") { launchSingleTop = true }
+                    },
+                    padding          = padding
+                )
+            }
             composable("share")    { ShareScreenContent(vm = vm, onBack = null, padding = padding) }
             composable("settings") { SettingsScreen(vm = vm, padding = padding) }
         }
