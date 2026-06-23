@@ -9,6 +9,7 @@ import com.aiexport.shareordirect.core.BlockParser
 import com.aiexport.shareordirect.util.ExportFormat
 import com.aiexport.shareordirect.util.FileSaver
 import com.aiexport.shareordirect.util.UrlFetcher
+import com.aiexport.shareordirect.util.WebViewFetcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -66,16 +67,27 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             _parseState.value = ParseState.Loading
             try {
-                val text = withContext(Dispatchers.IO) {
-                    if (UrlFetcher.isUrl(rawInput.trim())) {
-                        UrlFetcher.fetchText(rawInput.trim()) ?: rawInput
-                    } else {
-                        rawInput
+                val url = rawInput.trim()
+                val text: String = when {
+                    // Known JS-rendered AI share link — must use WebView
+                    UrlFetcher.isUrl(url) && WebViewFetcher.needsWebView(url) -> {
+                        WebViewFetcher.fetchText(ctx, url)
+                            ?: withContext(Dispatchers.IO) { UrlFetcher.fetchText(url) }
+                            ?: rawInput
                     }
+                    // Plain URL — try fast Jsoup fetch first, WebView fallback
+                    UrlFetcher.isUrl(url) -> {
+                        withContext(Dispatchers.IO) { UrlFetcher.fetchText(url) }
+                            ?: WebViewFetcher.fetchText(ctx, url)
+                            ?: rawInput
+                    }
+                    // Already plain text
+                    else -> rawInput
                 }
+
                 val blocks = withContext(Dispatchers.Default) { BlockParser.parse(text) }
                 if (blocks.isEmpty()) {
-                    _parseState.value = ParseState.Error("No content blocks found in this text")
+                    _parseState.value = ParseState.Error("No content blocks found.\nThe page may require a login or be unavailable.")
                 } else {
                     _parseState.value = ParseState.Ready(blocks, text)
                 }
