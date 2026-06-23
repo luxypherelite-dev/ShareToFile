@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Share to File</string>
+    <string name="accessibility_service_label">Share to File – Chat Capture</string>
+    <string name="accessibility_service_description">Captures the full content of watched AI chat apps so you can export conversations to PDF, TXT, or Markdown.</string>
+</resources>

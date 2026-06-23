@@ -1,0 +1,4 @@
+-keep class com.aiexport.shareordirect.** { *; }
+-keep class org.jsoup.** { *; }
+-dontwarn okhttp3.**
+-dontwarn okio.**
